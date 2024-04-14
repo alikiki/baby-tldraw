@@ -12,4 +12,3 @@ export function editorReducer(editor: any, action: EditorAction) {
   }
   return newEditor;
 }
-

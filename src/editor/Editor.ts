@@ -42,8 +42,7 @@ export class Editor {
         return this.testString;
     }
 
-    setTestString(input: string): this {
+    setTestString(input: string) {
         this.testString = input;
-        return this;
     }
 }
