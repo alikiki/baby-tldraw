@@ -1,6 +1,6 @@
 # baby-tldraw
 
-A small project that distills TLDraw down to its absolute basics.
+TLDraw in less than 1000 LOC.
 
 ## Features
 
