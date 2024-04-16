@@ -1,6 +1,6 @@
 export interface BabyTLCanvasOptions {
-    width: number;
-    height: number;
+    width: string;
+    height: string;
 }
 
 export interface BabyTLCanvasProps {

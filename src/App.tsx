@@ -1,28 +1,39 @@
 import './App.css'
-import { useState } from 'react'
 import { BabyTLCanvasOptions } from './types/canvas-types'
 import Canvas from './components/Canvas'
+import { useReducer } from 'react'
+import { EditorReducer } from './editor/EditorReducer'
 import { Editor } from './editor/Editor'
 import { EditorContext } from './hooks/useEditor'
-
+import { EditorDispatchContext } from './hooks/useEditorDispatch'
 
 function App() {
-  const [editor, setEditor] = useState(new Editor({
-    store: {
-      atoms: new Map()
-    },
-    tools: [],
-  }))
-
+  const [editor, dispatch] = useReducer(
+    EditorReducer,
+    {
+      initialCamera: {
+        x: 0,
+        y: 0
+      },
+      camera: {
+        x: 0,
+        y: 0
+      },
+      isPointerDown: false,
+      isPointerDragging: false
+    } as Editor
+  )
   const defaultCanvasOptions: BabyTLCanvasOptions = {
-    width: 800,
-    height: 600
+    width: "800px",
+    height: "600px",
   }
 
   return (
     <>
       <EditorContext.Provider value={editor}>
-        <Canvas options={defaultCanvasOptions} />
+        <EditorDispatchContext.Provider value={dispatch}>
+          <Canvas options={defaultCanvasOptions} />
+        </EditorDispatchContext.Provider>
       </EditorContext.Provider>
     </>
   )
