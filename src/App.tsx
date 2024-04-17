@@ -20,7 +20,8 @@ function App() {
         y: 0
       },
       isPointerDown: false,
-      isPointerDragging: false
+      isPointerDragging: false,
+      isMetaDown: false
     } as Editor
   )
   const defaultCanvasOptions: BabyTLCanvasOptions = {

@@ -6,9 +6,9 @@ export default function InnerCanvas() {
     console.log("re-rendering inner canvas.");
 
     return (
-        <div style={{ transform: `translate(${editor.camera.x}px, ${editor.camera.y}px)` }}>
-            {Array.from({ length: 100 }, (_, row) => {
-                return Array.from({ length: 100 }, (_, i) => {
+        <div style={{ transform: `scale(${editor.camera.z}) translate(${editor.camera.x}px, ${editor.camera.y}px)` }}>
+            {Array.from({ length: 10 }, (_, row) => {
+                return Array.from({ length: 10 }, (_, i) => {
                     return (< div key={i}
                         style={{
                             position: "absolute",

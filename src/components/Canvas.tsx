@@ -45,14 +45,41 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         editorDispatch({ object: "initial-camera", command: editor.camera })
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.metaKey) {
+            editorDispatch({ object: "keyboard", command: { key: "meta", direction: "down" } });
+        }
+    };
+
+    const handleKeyUp = (e: React.KeyboardEvent) => {
+        if (!e.metaKey) {
+            editorDispatch({ object: "keyboard", command: { key: "meta", direction: "up" } });
+        }
+    };
+
+    const handleZoom = (e: React.WheelEvent) => {
+        e.preventDefault();
+        if (!editor.isMetaDown) return;
+        console.log('zooming', e.deltaY);
+    }
+
     const pointerHandlers = {
         onPointerDown: handlePointerDown,
         onPointerMove: handlePointerMove,
         onPointerUp: handlePointerUp
     };
 
+    const wheelHandlers = {
+        onWheel: handleZoom
+    }
+
+    const keyHandlers = {
+        onKeyDown: handleKeyDown,
+        onKeyUp: handleKeyUp
+    }
+
     return (
-        <div ref={rCanvas} style={{ width: options.width, height: options.height, border: "1px solid black" }} {...pointerHandlers}>
+        <div ref={rCanvas} style={{ width: options.width, height: options.height, border: "1px solid black" }} {...pointerHandlers} {...wheelHandlers} {...keyHandlers} tabIndex={0} draggable={false}>
             <InnerCanvas />
         </div>
     )
