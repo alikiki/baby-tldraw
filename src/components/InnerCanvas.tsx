@@ -10,10 +10,10 @@ export default function InnerCanvas() {
                     return (< div key={i}
                         style={{
                             position: "absolute",
-                            top: (12 * row),
-                            left: (12 * i),
-                            width: 10,
-                            height: 10,
+                            top: (50 * row),
+                            left: (50 * i),
+                            width: 2,
+                            height: 2,
                             backgroundColor: "red" // Changed to red
                         }}>
                     </div>)

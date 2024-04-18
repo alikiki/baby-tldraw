@@ -2,7 +2,6 @@ import { Editor } from "./Editor";
 import { BabyTLEvent } from "../types/editor-types";
 
 export function EditorReducer(editor: Editor, action: BabyTLEvent) {
-    console.log(`received: ${JSON.stringify(action)}`)
     if (action.object === "camera") {
         return {
             ...editor,
