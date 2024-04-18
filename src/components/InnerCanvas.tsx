@@ -3,8 +3,6 @@ import { useEditor } from "../hooks/useEditor";
 export default function InnerCanvas() {
     const editor = useEditor();
 
-    console.log("re-rendering inner canvas.");
-
     return (
         <div style={{ transform: `scale(${editor.camera.z}) translate(${editor.camera.x}px, ${editor.camera.y}px)` }}>
             {Array.from({ length: 10 }, (_, row) => {

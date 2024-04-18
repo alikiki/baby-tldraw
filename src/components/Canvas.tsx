@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import InnerCanvas from "./InnerCanvas";
 import { BabyTLCanvasProps } from "../types/canvas-types";
 import { useEditor } from "../hooks/useEditor";
@@ -9,10 +9,8 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
     const editorDispatch = useEditorDispatch();
     const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
-
     const rCanvas = useRef<HTMLDivElement>(null);
 
-    console.log("re-rendering outer canvas.");
 
     const debuggingPointerState = () => {
         console.log('isPointerDown:', editor.isPointerDown);
@@ -37,7 +35,7 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         const newCameraX = editor.initialCamera.x + offsetX;
         const newCameraY = editor.initialCamera.y + offsetY;
 
-        editorDispatch({ object: "camera", command: { x: newCameraX, y: newCameraY } });
+        editorDispatch({ object: "camera", command: { x: newCameraX, y: newCameraY, z: editor.camera.z } });
     }
 
     const handlePointerUp = (e: React.PointerEvent) => {
@@ -58,9 +56,16 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
     };
 
     const handleZoom = (e: React.WheelEvent) => {
-        e.preventDefault();
         if (!editor.isMetaDown) return;
         console.log('zooming', e.deltaY);
+        editorDispatch({
+            object: "camera", command: {
+                x: editor.camera.x,
+                y: editor.camera.y,
+                z: editor.camera.z + (e.deltaY * 0.001)
+
+            }
+        })
     }
 
     const pointerHandlers = {
@@ -77,6 +82,15 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         onKeyDown: handleKeyDown,
         onKeyUp: handleKeyUp
     }
+
+    useEffect(() => {
+        if (!rCanvas.current) return;
+        rCanvas.current.addEventListener('wheel', handleZoom, { passive: false });
+
+        return () => {
+            rCanvas.current?.removeEventListener('wheel', handleZoom);
+        }
+    })
 
     return (
         <div ref={rCanvas} style={{ width: options.width, height: options.height, border: "1px solid black" }} {...pointerHandlers} {...wheelHandlers} {...keyHandlers} tabIndex={0} draggable={false}>
