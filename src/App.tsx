@@ -32,13 +32,13 @@ function App() {
   }
 
   return (
-    <>
+    <div>
       <EditorContext.Provider value={editor}>
         <EditorDispatchContext.Provider value={dispatch}>
           <Canvas options={defaultCanvasOptions} />
         </EditorDispatchContext.Provider>
       </EditorContext.Provider>
-    </>
+    </div>
   )
 }
 

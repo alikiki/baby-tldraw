@@ -1,27 +1,24 @@
-import { useEditor } from "../hooks/useEditor";
+export default function InnerCanvas({ camera }) {
 
-export default function InnerCanvas() {
-    const editor = useEditor();
+    const convertCameraToTranslation = (camera: { x: number, y: number, z: number }) => {
+        return `scale(${camera.z}) translate(${camera.x}px, ${camera.y}px)`
+    }
 
     return (
-        <div style={{ transform: `scale(${editor.camera.z}) translate(${editor.camera.x}px, ${editor.camera.y}px)` }}>
-            {Array.from({ length: 10 }, (_, row) => {
-                return Array.from({ length: 10 }, (_, i) => {
-                    return (< div key={i}
-                        style={{
-                            position: "absolute",
-                            top: (50 * row),
-                            left: (50 * i),
-                            width: 2,
-                            height: 2,
-                            backgroundColor: "red" // Changed to red
-                        }}>
-                    </div>)
-                })
-            })}
-
-            {/* <div style={{ position: "absolute", top: 0, left: 0, width: 100, height: 100, backgroundColor: "red" }}></div>
-            <div style={{ position: "absolute", top: 0, left: 105, width: 100, height: 100, backgroundColor: "red" }}></div> */}
-        </div >
+        <svg>
+            <defs>
+                <rect id="box" x="100" y="100" height="100" width="100" />
+            </defs>
+            <g style={{ transform: convertCameraToTranslation(camera) }}>
+                {Array.from(Array(100)).map((_, i) => (
+                    <use
+                        key={i}
+                        href="#box"
+                        x={(i % 10) * 200}
+                        y={Math.floor(i / 10) * 200}
+                    />
+                ))}
+            </g>
+        </svg>
     )
 }

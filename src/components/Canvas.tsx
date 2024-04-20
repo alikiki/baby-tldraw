@@ -1,97 +1,75 @@
 import { useRef, useState, useEffect } from "react";
-import InnerCanvas from "./InnerCanvas";
 import { BabyTLCanvasProps } from "../types/canvas-types";
-import { useEditor } from "../hooks/useEditor";
-import { useEditorDispatch } from "../hooks/useEditorDispatch";
+import { BabyTLCamera } from "../types/editor-types";
+import InnerCanvas from "./InnerCanvas";
+
+interface Point {
+    x: number,
+    y: number
+}
 
 export default function Canvas({ options }: BabyTLCanvasProps) {
-    const editor = useEditor();
-    const editorDispatch = useEditorDispatch();
+    const [camera, setCamera] = useState({ x: 0, y: 0, z: 1 });
+    const [initialCamera, setInitialCamera] = useState({ x: 0, y: 0, z: 1 });
     const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+
+    const [interactionEvents, setInteractionEvents] = useState({
+        pointerDown: false,
+        metaDown: false
+    });
 
     const rCanvas = useRef<HTMLDivElement>(null);
 
-
-    const debuggingPointerState = () => {
-        console.log('isPointerDown:', editor.isPointerDown);
-        console.log('isPointerDragging:', editor.isPointerDragging);
-        console.log('camera:', editor.camera);
+    const viewportToGlobal = (point: Point, camera: BabyTLCamera): BabyTLCamera => {
+        return {
+            x: (point.x / camera.z) - camera.x,
+            y: (point.y / camera.z) - camera.y,
+            z: camera.z
+        }
     }
 
     const handlePointerDown = (e: React.PointerEvent) => {
-        editorDispatch({ object: "pointer", command: "down" });
-        console.log('pointer down');
-        const globalX = (e.clientX / editor.camera.z) - editor.initialCamera.x;
-        const globalY = (e.clientY / editor.camera.z) - editor.initialCamera.y;
-        setStartPos({ x: globalX, y: globalY });
-        debuggingPointerState();
+        setStartPos({ x: e.clientX, y: e.clientY });
+        setInteractionEvents({ ...interactionEvents, pointerDown: true });
     }
 
     const handlePointerMove = (e: React.PointerEvent) => {
-        if (!editor.isPointerDown) return;
-        editorDispatch({ object: "pointer", command: "drag" });
+        const { pointerDown } = interactionEvents;
+        if (!pointerDown) return;
 
-        const offsetX = (e.clientX / editor.camera.z) - editor.initialCamera.x - startPos.x;
-        const offsetY = (e.clientY / editor.camera.z) - editor.initialCamera.y - startPos.y;
+        const offsetX = startPos.x - e.clientX;
+        const offsetY = startPos.y - e.clientY;
 
-        const newCameraX = editor.initialCamera.x + offsetX;
-        const newCameraY = editor.initialCamera.y + offsetY;
+        const newCameraX = initialCamera.x - (offsetX / camera.z);
+        const newCameraY = initialCamera.y - (offsetY / camera.z);
 
-        editorDispatch({ object: "camera", command: { x: newCameraX, y: newCameraY, z: editor.camera.z } });
+        setCamera({ x: newCameraX, y: newCameraY, z: camera.z });
     }
 
     const handlePointerUp = (e: React.PointerEvent) => {
-        editorDispatch({ object: "pointer", command: "up" });
-        editorDispatch({ object: "initial-camera", command: editor.camera })
+        setInteractionEvents({ ...interactionEvents, pointerDown: false });
+        setInitialCamera({ ...camera });
     }
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.metaKey) {
-            editorDispatch({ object: "keyboard", command: { key: "meta", direction: "down" } });
-        }
-    };
+    // const handleKeyDown = (e: React.KeyboardEvent) => {
+    //     if (e.metaKey) {
+    //         editorDispatch({ object: "keyboard", command: { key: "meta", direction: "down" } });
+    //     }
+    // };
 
-    const handleKeyUp = (e: React.KeyboardEvent) => {
-        if (!e.metaKey) {
-            editorDispatch({ object: "keyboard", command: { key: "meta", direction: "up" } });
-        }
-    };
+    // const handleKeyUp = (e: React.KeyboardEvent) => {
+    //     if (!e.metaKey) {
+    //         editorDispatch({ object: "keyboard", command: { key: "meta", direction: "up" } });
+    //     }
+    // };
 
-    const handleZoom = (e: React.WheelEvent) => {
-        if (!editor.isMetaDown) return;
-        console.log('zooming', e.deltaY);
-        const zoomOffset = (e.deltaY * 0.005);
-        const newZoom = editor.camera.z + zoomOffset;
-        const cappedZoom = Math.min(4, Math.max(0.1, newZoom));
+    // BUG:
+    // basically the problem is that the zooming is not happening around the pointer
+    // every time I zoom, the position of my pointer in global space changes very slightly
 
-        console.log('client pointer position', e.clientX, e.clientY);
-        console.log('camera position', editor.camera.x, editor.camera.y);
+    // the pointer in global space should be invariant.
 
-        const offsetX = ((e.clientX / cappedZoom) - editor.camera.x) - editor.camera.x;
-        const offsetY = ((e.clientY / cappedZoom) - editor.camera.y) - editor.camera.y;
-
-        console.log('offsetX', offsetX);
-        console.log('offsetY', offsetY);
-
-        const newCameraX = editor.camera.x + (offsetX * zoomOffset);
-        const newCameraY = editor.camera.y + (offsetY * zoomOffset);
-
-
-        editorDispatch({
-            object: "camera", command: {
-                x: newCameraX,
-                y: newCameraY,
-                z: cappedZoom,
-            }
-        })
-        editorDispatch({
-            object: "initial-camera", command: {
-                x: newCameraX,
-                y: newCameraY,
-                z: cappedZoom,
-            }
-        })
-    }
+    // like concenptually i dont understand how the zoom works.
 
     const pointerHandlers = {
         onPointerDown: handlePointerDown,
@@ -99,28 +77,54 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         onPointerUp: handlePointerUp
     };
 
-    const wheelHandlers = {
-        onWheel: handleZoom
-    }
 
-    const keyHandlers = {
-        onKeyDown: handleKeyDown,
-        onKeyUp: handleKeyUp
+    // const keyHandlers = {
+    //     onKeyDown: handleKeyDown,
+    //     onKeyUp: handleKeyUp
+    // }
+
+    const zoomCamera = (point: Point, camera: BabyTLCamera, zoomOffset: number) => {
+        const zoom = camera.z - zoomOffset * camera.z;
+
+        const p1 = viewportToGlobal(point, camera);
+        const p2 = viewportToGlobal(point, { ...camera, z: zoom });
+
+        return {
+            x: camera.x + (p2.x - p1.x),
+            y: camera.y + (p2.y - p1.y),
+            z: zoom
+        };
     }
 
     useEffect(() => {
-        if (!rCanvas.current) return;
-        rCanvas.current.focus();
-        rCanvas.current.addEventListener('wheel', handleZoom, { passive: false });
+        const handleZoom = (e: React.WheelEvent) => {
+            e.preventDefault();
+            console.log(e);
+            const { offsetX: x, offsetY: y, deltaY, metaKey } = e;
+
+            if (!metaKey) return;
+
+            console.log('client coords:', x, y);
+            console.log('----');
+
+            setCamera((camera) => zoomCamera({ x: x, y: y }, camera, deltaY * 0.01));
+        }
+
+        const elm = rCanvas.current;
+        if (!elm) return;
+
+        elm.addEventListener('wheel', handleZoom, { passive: false });
 
         return () => {
-            rCanvas.current?.removeEventListener('wheel', handleZoom);
+            elm.removeEventListener('wheel', handleZoom);
         }
-    }, [rCanvas.current])
+    }, [rCanvas])
 
     return (
-        <div ref={rCanvas} style={{ width: options.width, height: options.height, border: "1px solid black" }} {...pointerHandlers} {...wheelHandlers} {...keyHandlers} tabIndex={0} draggable={false}>
-            <InnerCanvas />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+            <div ref={rCanvas} className="canvas"  {...pointerHandlers}>
+                <InnerCanvas camera={camera} />
+            </div>
         </div>
     )
 }  

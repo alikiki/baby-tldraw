@@ -6,7 +6,8 @@ TLDraw in less than 1000 LOC.
 
 1. Infinite canvas
 2. (DONE) Panning
-3. Zooming
+3. (DONE) Zooming
+    - nevermind, zooming is still borked.
 4. Dragging shapes 
 5. Selecting shapes
 6. Drawing rectangles
