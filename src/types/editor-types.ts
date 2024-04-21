@@ -25,6 +25,8 @@ export interface Shape {
     y: number,
     width: number,
     height: number,
+    tmpX?: number,
+    tmpY?: number,
     selected: boolean
 }
 

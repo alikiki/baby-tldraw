@@ -55,30 +55,56 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         };
     }
 
+    const getSelectedShapes = (ids: string[]): ShapeStore => {
+        const selectedShapes: ShapeStore = {};
+        for (const id of ids) {
+            selectedShapes[id] = shapes[id];
+        }
+        return selectedShapes;
+    }
+
     const handlePointerDown = (e: React.PointerEvent) => {
+        const pointerPos = { x: e.clientX, y: e.clientY };
+        const globalPointerPos = viewportToGlobal(pointerPos, camera);
+
+        setStartPos(pointerPos);
+        setInteractionEvents({ ...interactionEvents, pointerDown: true });
+
         if (tool === "hand") {
             setInitialCamera(camera);
         } else if (tool === "draw") {
             resetShapeHighlight();
             setActiveShapeId(`shape-${Date.now()}`);
         } else if (tool === "select") {
-            setSelectionBox({ type: "rect", x: e.clientX, y: e.clientY, width: 0, height: 0, selected: true });
+            if (selectedIds.length > 0) {
+                const selectedShapes = getSelectedShapes(selectedIds);
+                const pointerInsideSelectedShape = Object.values(selectedShapes).some((shape) => {
+                    return isInside(globalPointerPos, shape);
+                })
+
+                console.log("pointerInsideSelectedShape", pointerInsideSelectedShape);
+                if (!pointerInsideSelectedShape) {
+                    resetShapeHighlight();
+                    setSelectedIds([]);
+                    setSelectionBox({ type: "rect", x: e.clientX, y: e.clientY, width: 0, height: 0, selected: true });
+                }
+            } else {
+                setSelectionBox({ type: "rect", x: e.clientX, y: e.clientY, width: 0, height: 0, selected: true });
+            }
         }
 
-        setStartPos({ x: e.clientX, y: e.clientY });
-        setInteractionEvents({ ...interactionEvents, pointerDown: true });
     }
 
     const handlePointerMove = (e: React.PointerEvent) => {
         const { pointerDown } = interactionEvents;
         if (!pointerDown) return;
 
-        const offsetX = startPos.x - e.clientX;
-        const offsetY = startPos.y - e.clientY;
+        const offsetX = e.clientX - startPos.x;
+        const offsetY = e.clientY - startPos.y;
 
         if (tool === "hand") {
-            const newCameraX = initialCamera.x - (offsetX / camera.z);
-            const newCameraY = initialCamera.y - (offsetY / camera.z);
+            const newCameraX = initialCamera.x + (offsetX / camera.z);
+            const newCameraY = initialCamera.y + (offsetY / camera.z);
 
             setCamera({ x: newCameraX, y: newCameraY, z: camera.z });
         } else if (tool === "draw") {
@@ -109,26 +135,30 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
             const p1 = viewportToGlobal(startPos, camera);
             const p2 = viewportToGlobal({ x: e.clientX, y: e.clientY }, camera);
 
-            const width = Math.abs(p2.x - p1.x);
-            const height = Math.abs(p2.y - p1.y);
+            if (selectionBox) {
+                const width = Math.abs(p2.x - p1.x);
+                const height = Math.abs(p2.y - p1.y);
 
-            const x = Math.min(p1.x, p2.x);
-            const y = Math.min(p1.y, p2.y);
+                const x = Math.min(p1.x, p2.x);
+                const y = Math.min(p1.y, p2.y);
 
-            const newSelectionBox = { type: "rect", x, y, width, height, selected: true };
+                const newSelectionBox = { type: "rect", x, y, width, height, selected: true };
 
-            for (const [id, shape] of Object.entries(shapes)) {
-                const intersecting = intersects(shape, newSelectionBox) || intersects(newSelectionBox, shape);
-                if (shape.selected !== intersecting) {
-                    setSelectedIds((selectedIds) => {
-                        if (intersecting) return [...selectedIds, id];
-                        return selectedIds.filter((selectedId) => selectedId !== id);
-                    })
-                    changeShapeHighlight(id);
+                for (const [id, shape] of Object.entries(shapes)) {
+                    const intersecting = intersects(shape, newSelectionBox) || intersects(newSelectionBox, shape);
+                    if (shape.selected !== intersecting) {
+                        setSelectedIds((selectedIds) => {
+                            if (intersecting) return [...selectedIds, id];
+                            return selectedIds.filter((selectedId) => selectedId !== id);
+                        })
+                        changeShapeHighlight(id);
+                    }
                 }
-            }
 
-            setSelectionBox(newSelectionBox);
+                setSelectionBox(newSelectionBox);
+            } else {
+                changeShapePosition(selectedIds, offsetX / camera.z, offsetY / camera.z);
+            }
         }
     }
 
@@ -139,10 +169,11 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
             setInitialCamera(camera);
         } else if (tool === "draw") {
             setActiveShapeId(null);
+            cleanupTmpPosition();
             setTool("select");
         } else if (tool === "select") {
             setSelectionBox(null);
-            console.log(selectedIds);
+            cleanupTmpPosition();
         }
     }
 
@@ -186,6 +217,32 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         setShapes(newShapes);
     }
 
+    const cleanupTmpPosition = () => {
+        const newShapes = { ...shapes };
+        for (const id of selectedIds) {
+            const shape = shapes[id];
+            const newShape = { ...shape, tmpX: shape.x, tmpY: shape.y };
+            newShapes[id] = newShape;
+        }
+
+        setShapes(newShapes);
+    }
+
+    const changeShapePosition = (ids: string[], offsetX: number, offsetY: number) => {
+        const newShapes = { ...shapes };
+        for (const id of ids) {
+            const oldShape = shapes[id];
+
+            if (!oldShape.tmpX) oldShape.tmpX = oldShape.x;
+            if (!oldShape.tmpY) oldShape.tmpY = oldShape.y;
+
+            const newShape = { ...oldShape, x: oldShape.tmpX + offsetX, y: oldShape.tmpY + offsetY };
+            newShapes[id] = newShape;
+        }
+
+        setShapes(newShapes);
+    }
+
     const pointerHandlers = {
         onPointerDown: handlePointerDown,
         onPointerMove: handlePointerMove,
@@ -218,9 +275,9 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
     return (
         <div style={{ display: "flex", justifyContent: "center" }}>
             <div className="toolbar" style={{ zIndex: 9999 }}>
-                <button onClick={() => setTool("hand")}>🖐️</button>
-                <button onClick={() => setTool("select")}>👆</button>
-                <button onClick={() => setTool("draw")}>🖊️</button>
+                <button onClick={() => setTool("hand")} style={{ background: tool === "hand" ? "gray" : "white" }}>🖐️</button>
+                <button onClick={() => setTool("select")} style={{ background: tool === "select" ? "gray" : "white" }}>👆</button>
+                <button onClick={() => setTool("draw")} style={{ background: tool === "draw" ? "gray" : "white" }}>🖊️</button>
             </div>
             <div ref={rCanvas} className="canvas"  {...pointerHandlers}>
                 <InnerCanvas camera={camera} shapes={shapes} selectionBox={selectionBox} />

@@ -17,9 +17,9 @@ export default function InnerCanvas({ camera, shapes, selectionBox }: InnerCanva
         const path = `M ${shape.x} ${shape.y} h ${shape.width} v ${shape.height} h -${shape.width} Z`
 
         const style = {
-            stroke: shape.selected ? 'blue' : 'none',
-            strokeWidth: shape.selected ? '2' : '0',
-            fill: 'black',
+            stroke: shape.selected ? 'red' : 'none',
+            strokeWidth: shape.selected ? '5' : '0',
+            fill: 'gray',
         };
 
         return { path, style };
