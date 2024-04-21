@@ -17,9 +17,9 @@ export default function InnerCanvas({ camera, shapes, selectionBox }: InnerCanva
         const path = `M ${shape.x} ${shape.y} h ${shape.width} v ${shape.height} h -${shape.width} Z`
 
         const style = {
-            stroke: shape.selected ? 'red' : 'none',
-            strokeWidth: shape.selected ? '5' : '0',
-            fill: 'gray',
+            stroke: shape.selected ? 'blue' : 'black',
+            strokeWidth: shape.selected ? `${3 / camera.z}` : '2',
+            fill: 'lightgray',
         };
 
         return { path, style };
@@ -31,12 +31,11 @@ export default function InnerCanvas({ camera, shapes, selectionBox }: InnerCanva
                 <rect id="box" x="100" y="100" height="100" width="100" />
             </defs>
             <g style={{ transform: convertCameraToTranslation(camera) }}>
-                {selectionBox && <path d={generateSVGPath(selectionBox).path} style={{ stroke: "blue", strokeWidth: "2", fill: "none" }} />}
                 {Object.entries(shapes).map(([k, shape]) => {
                     const { path, style } = generateSVGPath(shape);
                     return <path key={k} d={path} style={style} />
-                }
-                )}
+                })}
+                {selectionBox && <path d={generateSVGPath(selectionBox).path} style={{ fill: "lightblue", fillOpacity: "0.4" }} />}
             </g>
         </svg>
     )

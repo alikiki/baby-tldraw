@@ -1,23 +1,12 @@
 # baby-tldraw
 
-TLDraw in less than 1000 LOC.
+TLDraw in less than 500 LOC.
 
 ## Features
-
-1. Infinite canvas
-2. (DONE) Panning
-3. (DONE) Zooming
-    - nevermind, zooming is still borked.
-4. Dragging shapes 
-5. Selecting shapes
-6. Drawing rectangles
-7. Deleting rectangles
-
-
 - [x] Panning
-- [ ] Zooming
-- [ ] Drawing rectangles
-- [ ] Deleting rectangles
-- [ ] Hand tool
-- [ ] Drawing tool
-- [ ] Dragging tool
+- [x] Zooming
+- [x] Drawing rectangles
+- [x] Deleting rectangles
+- [x] Hand tool
+- [x] Drawing tool
+- [x] Dragging tool
