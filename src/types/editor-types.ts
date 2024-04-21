@@ -1,7 +1,16 @@
+export type Tool = "hand" | "draw" | "select";
+
 export interface Camera {
     x: number;
     y: number;
     z: number;
+}
+
+export interface Box {
+    x: number,
+    y: number,
+    width: number,
+    height: number
 }
 
 export interface Point {
