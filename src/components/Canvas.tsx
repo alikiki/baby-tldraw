@@ -1,26 +1,10 @@
 import { useRef, useState, useEffect } from "react";
 import { BabyTLCanvasProps } from "../types/canvas-types";
-import { BabyTLCamera } from "../types/editor-types";
+import { BabyTLCamera, Shape, ShapeStore, Point } from "../types/editor-types";
 import InnerCanvas from "./InnerCanvas";
 
-interface Point {
-    x: number,
-    y: number
-}
 
-interface Shape {
-    type: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number
-}
-
-type ShapeStore = {
-    [key: string]: Shape;
-};
-
-type Tool = "hand" | "draw";
+type Tool = "hand" | "draw" | "select";
 
 export default function Canvas({ options }: BabyTLCanvasProps) {
     const rCanvas = useRef<HTMLDivElement>(null);
@@ -74,6 +58,8 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         } else if (tool === "draw") {
             setActiveShapeId(`shape-${Date.now()}`);
             console.log(shapes);
+        } else if (tool === "select") {
+            console.log("selecting");
         }
 
         setStartPos({ x: e.clientX, y: e.clientY });
@@ -126,6 +112,8 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
             setInitialCamera(camera);
         } else if (tool === "draw") {
             setActiveShapeId(null);
+        } else if (tool === "select") {
+            console.log("selecting");
         }
     }
 
@@ -168,6 +156,7 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         <div style={{ display: "flex", justifyContent: "center" }}>
             <div className="toolbar" style={{ zIndex: 9999 }}>
                 <button onClick={() => setTool("hand")}>🖐️</button>
+                <button onClick={() => setTool("select")}>👆</button>
                 <button onClick={() => setTool("draw")}>🖊️</button>
             </div>
             <div ref={rCanvas} className="canvas"  {...pointerHandlers}>

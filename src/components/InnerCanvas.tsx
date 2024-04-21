@@ -1,22 +1,10 @@
 import { BabyTLCamera } from "../types/editor-types"
-
-interface Shape {
-    id: string,
-    type: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number
-}
+import { Shape, ShapeStore } from "../types/editor-types"
 
 interface InnerCanvasProps {
     camera: BabyTLCamera,
     shapes: ShapeStore
 }
-
-type ShapeStore = {
-    [key: string]: Shape;
-};
 
 export default function InnerCanvas({ camera, shapes }: InnerCanvasProps) {
 
