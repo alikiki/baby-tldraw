@@ -76,7 +76,9 @@ export default function Canvas() {
 
     // user interaction handlers
     const handleKeyUp = (e: React.KeyboardEvent) => {
-        console.log(e);
+        if (e.key === "h") setTool("hand");
+        if (e.key === "s") setTool("select");
+        if (e.key === "d") setTool("draw");
         if (e.key === "Backspace") {
             const newShapes = { ...shapes };
             for (const id of selectedIds) {
@@ -218,8 +220,14 @@ export default function Canvas() {
         onKeyDown: handleKeyUp
     }
 
+    const cursorChoice = () => {
+        if (tool === "hand") return "grab";
+        if (tool === "draw") return "crosshair";
+        return "default";
+    }
+
     return (
-        <div style={{ display: "flex", justifyContent: "center" }}>
+        <div style={{ display: "flex", justifyContent: "center", cursor: cursorChoice() }}>
             <div className="toolbar" style={{ zIndex: 9999 }}>
                 <button onClick={() => setTool("hand")} style={{ background: highlightTool("hand") }}>🖐️</button>
                 <button onClick={() => setTool("select")} style={{ background: highlightTool("select") }}>👆</button>
