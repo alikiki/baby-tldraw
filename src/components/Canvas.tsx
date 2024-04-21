@@ -76,7 +76,7 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
     useEffect(() => {
         const handleZoom = (e: React.WheelEvent) => {
             if (!editor.isMetaDown) return;
-            const { clientX: x, clientY: y, deltaY } = e;
+            const { offsetX: x, offsetY: y, deltaY } = e;
 
             const zoomOffset = (deltaY * 0.005);
             const newZoom = editor.camera.z + zoomOffset;
