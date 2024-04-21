@@ -24,7 +24,8 @@ export interface Shape {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
+    selected: boolean
 }
 
 export type ShapeStore = {

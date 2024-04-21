@@ -3,7 +3,6 @@ import { BabyTLCanvasProps } from "../types/canvas-types";
 import { BabyTLCamera, Shape, ShapeStore, Point } from "../types/editor-types";
 import InnerCanvas from "./InnerCanvas";
 
-
 type Tool = "hand" | "draw" | "select";
 
 export default function Canvas({ options }: BabyTLCanvasProps) {
@@ -24,6 +23,10 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
     // draw tool
     const [shapes, setShapes] = useState<ShapeStore>({} as ShapeStore);
     const [activeShapeId, setActiveShapeId] = useState<string | null>(null);
+
+    // select tool
+    const [selectionBox, setSelectionBox] = useState<Shape | null>(null);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const viewportToGlobal = (point: Point, camera: BabyTLCamera): Point => {
         return {
@@ -56,10 +59,10 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         if (tool === "hand") {
             setInitialCamera(camera);
         } else if (tool === "draw") {
+            resetShapeHighlight();
             setActiveShapeId(`shape-${Date.now()}`);
-            console.log(shapes);
         } else if (tool === "select") {
-            console.log("selecting");
+            setSelectionBox({ type: "rect", x: e.clientX, y: e.clientY, width: 0, height: 0, selected: true });
         }
 
         setStartPos({ x: e.clientX, y: e.clientY });
@@ -98,10 +101,34 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
 
             const newShape: Shape = {
                 type: "rect",
-                x, y, width, height
+                x, y, width, height, selected: false
             }
 
-            setShapes((shapes) => updateShapes(shapes, id, newShape))
+            setShapes((shapes) => addShapes(shapes, id, newShape))
+        } else if (tool === "select") {
+            const p1 = viewportToGlobal(startPos, camera);
+            const p2 = viewportToGlobal({ x: e.clientX, y: e.clientY }, camera);
+
+            const width = Math.abs(p2.x - p1.x);
+            const height = Math.abs(p2.y - p1.y);
+
+            const x = Math.min(p1.x, p2.x);
+            const y = Math.min(p1.y, p2.y);
+
+            const newSelectionBox = { type: "rect", x, y, width, height, selected: true };
+
+            for (const [id, shape] of Object.entries(shapes)) {
+                const intersecting = intersects(shape, newSelectionBox) || intersects(newSelectionBox, shape);
+                if (shape.selected !== intersecting) {
+                    setSelectedIds((selectedIds) => {
+                        if (intersecting) return [...selectedIds, id];
+                        return selectedIds.filter((selectedId) => selectedId !== id);
+                    })
+                    changeShapeHighlight(id);
+                }
+            }
+
+            setSelectionBox(newSelectionBox);
         }
     }
 
@@ -112,15 +139,51 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
             setInitialCamera(camera);
         } else if (tool === "draw") {
             setActiveShapeId(null);
+            setTool("select");
         } else if (tool === "select") {
-            console.log("selecting");
+            setSelectionBox(null);
+            console.log(selectedIds);
         }
     }
 
-    const updateShapes = (shapes: ShapeStore, newShapeId: string, newShape: Shape): ShapeStore => {
+    const isInside = (point: Point, shape: Shape): boolean => {
+        return point.x >= shape.x && point.x <= shape.x + shape.width &&
+            point.y >= shape.y && point.y <= shape.y + shape.height;
+    }
+
+    const intersects = (shape: Shape, selection: Shape): boolean => {
+        const p1 = { x: shape.x, y: shape.y };
+        const p2 = { x: shape.x + shape.width, y: shape.y };
+        const p3 = { x: shape.x, y: shape.y + shape.height };
+        const p4 = { x: shape.x + shape.width, y: shape.y + shape.height };
+
+        return isInside(p1, selection) || isInside(p2, selection) || isInside(p3, selection) || isInside(p4, selection);
+    }
+
+    const addShapes = (shapes: ShapeStore, newShapeId: string, newShape: Shape): ShapeStore => {
         const newShapes = { ...shapes };
         newShapes[newShapeId] = newShape;
         return newShapes;
+    }
+
+    const changeShapeHighlight = (id: string) => {
+        const newShapes = { ...shapes };
+        const oldShape = shapes[id];
+
+        const newShape = { ...oldShape, selected: !oldShape.selected };
+        newShapes[id] = newShape;
+
+        setShapes(newShapes);
+    }
+
+    const resetShapeHighlight = () => {
+        const newShapes = { ...shapes };
+        for (const [id, shape] of Object.entries(shapes)) {
+            const newShape = { ...shape, selected: false };
+            newShapes[id] = newShape;
+        }
+
+        setShapes(newShapes);
     }
 
     const pointerHandlers = {
@@ -160,7 +223,7 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
                 <button onClick={() => setTool("draw")}>🖊️</button>
             </div>
             <div ref={rCanvas} className="canvas"  {...pointerHandlers}>
-                <InnerCanvas camera={camera} shapes={shapes} />
+                <InnerCanvas camera={camera} shapes={shapes} selectionBox={selectionBox} />
             </div>
         </div>
     )
