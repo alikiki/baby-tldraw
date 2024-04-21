@@ -1,13 +1,12 @@
 # baby-tldraw
 
-A small project that distills TLDraw down to its absolute basics.
+TLDraw in less than 500 LOC.
 
 ## Features
-
-1. Infinite canvas
-2. Panning (hand tool)
-3. Zooming
-4. Dragging 
-5. Selection
-6. Drawing rectangles
-7. Deleting rectangles
+- [x] Panning
+- [x] Zooming
+- [x] Drawing rectangles
+- [x] Deleting rectangles
+- [x] Hand tool
+- [x] Drawing tool
+- [x] Dragging tool
