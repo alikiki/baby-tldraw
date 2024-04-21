@@ -8,17 +8,38 @@ interface Point {
     y: number
 }
 
-export default function Canvas({ options }: BabyTLCanvasProps) {
-    const [camera, setCamera] = useState<BabyTLCamera>({ x: 0, y: 0, z: 1 });
-    const [initialCamera, setInitialCamera] = useState<BabyTLCamera>({ x: 0, y: 0, z: 1 });
-    const [startPos, setStartPos] = useState<Point>({ x: 0, y: 0 });
+interface Shape {
+    type: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+}
 
+type ShapeStore = {
+    [key: string]: Shape;
+};
+
+type Tool = "hand" | "draw";
+
+export default function Canvas({ options }: BabyTLCanvasProps) {
+    const rCanvas = useRef<HTMLDivElement>(null);
+
+    // global canvas states
+    const [camera, setCamera] = useState<BabyTLCamera>({ x: 0, y: 0, z: 1 });
+    const [tool, setTool] = useState<Tool>("hand");
     const [interactionEvents, setInteractionEvents] = useState({
         pointerDown: false,
         metaDown: false
     });
 
-    const rCanvas = useRef<HTMLDivElement>(null);
+    // hand tool
+    const [startPos, setStartPos] = useState<Point>({ x: 0, y: 0 });
+    const [initialCamera, setInitialCamera] = useState<BabyTLCamera>({ x: 0, y: 0, z: 1 });
+
+    // draw tool
+    const [shapes, setShapes] = useState<ShapeStore>({} as ShapeStore);
+    const [activeShapeId, setActiveShapeId] = useState<string | null>(null);
 
     const viewportToGlobal = (point: Point, camera: BabyTLCamera): Point => {
         return {
@@ -48,8 +69,13 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
     }
 
     const handlePointerDown = (e: React.PointerEvent) => {
-        console.log("pointer down");
-        setInitialCamera(camera);
+        if (tool === "hand") {
+            setInitialCamera(camera);
+        } else if (tool === "draw") {
+            setActiveShapeId(`shape-${Date.now()}`);
+            console.log(shapes);
+        }
+
         setStartPos({ x: e.clientX, y: e.clientY });
         setInteractionEvents({ ...interactionEvents, pointerDown: true });
     }
@@ -58,20 +84,55 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         const { pointerDown } = interactionEvents;
         if (!pointerDown) return;
 
-        console.log(e);
-
         const offsetX = startPos.x - e.clientX;
         const offsetY = startPos.y - e.clientY;
 
-        const newCameraX = initialCamera.x - (offsetX / camera.z);
-        const newCameraY = initialCamera.y - (offsetY / camera.z);
+        if (tool === "hand") {
+            const newCameraX = initialCamera.x - (offsetX / camera.z);
+            const newCameraY = initialCamera.y - (offsetY / camera.z);
 
-        setCamera({ x: newCameraX, y: newCameraY, z: camera.z });
+            setCamera({ x: newCameraX, y: newCameraY, z: camera.z });
+        } else if (tool === "draw") {
+            const p1 = viewportToGlobal(startPos, camera);
+            const p2 = viewportToGlobal({ x: e.clientX, y: e.clientY }, camera);
+
+            const width = Math.abs(p2.x - p1.x);
+            const height = Math.abs(p2.y - p1.y);
+
+            const x = Math.min(p1.x, p2.x);
+            const y = Math.min(p1.y, p2.y);
+
+            let id: string;
+            if (!activeShapeId) {
+                id = `shape-${Date.now()}`;
+                setActiveShapeId(id);
+            } else {
+                id = activeShapeId;
+            }
+
+            const newShape: Shape = {
+                type: "rect",
+                x, y, width, height
+            }
+
+            setShapes((shapes) => updateShapes(shapes, id, newShape))
+        }
     }
 
     const handlePointerUp = (e: React.PointerEvent) => {
         setInteractionEvents({ ...interactionEvents, pointerDown: false });
-        setInitialCamera(camera);
+
+        if (tool === "hand") {
+            setInitialCamera(camera);
+        } else if (tool === "draw") {
+            setActiveShapeId(null);
+        }
+    }
+
+    const updateShapes = (shapes: ShapeStore, newShapeId: string, newShape: Shape): ShapeStore => {
+        const newShapes = { ...shapes };
+        newShapes[newShapeId] = newShape;
+        return newShapes;
     }
 
     const pointerHandlers = {
@@ -80,12 +141,9 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
         onPointerUp: handlePointerUp
     };
 
-
-
     useEffect(() => {
         const handleZoom = (e: React.WheelEvent) => {
             e.preventDefault();
-            console.log(e);
             const { clientX: x, clientY: y, deltaY, metaKey } = e;
 
             if (!metaKey) return;
@@ -108,8 +166,12 @@ export default function Canvas({ options }: BabyTLCanvasProps) {
 
     return (
         <div style={{ display: "flex", justifyContent: "center" }}>
+            <div className="toolbar" style={{ zIndex: 9999 }}>
+                <button onClick={() => setTool("hand")}>🖐️</button>
+                <button onClick={() => setTool("draw")}>🖊️</button>
+            </div>
             <div ref={rCanvas} className="canvas"  {...pointerHandlers}>
-                <InnerCanvas camera={camera} />
+                <InnerCanvas camera={camera} shapes={shapes} />
             </div>
         </div>
     )
