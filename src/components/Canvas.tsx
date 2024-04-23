@@ -99,10 +99,14 @@ export default function Canvas() {
 
         if (tool === "hand") {
             setInitialCamera(camera);
-        } else if (tool === "draw") {
+        }
+
+        if (tool === "draw") {
             resetShapeHighlight();
             setActiveShapeId(`shape-${Date.now()}`);
-        } else if (tool === "select") {
+        }
+
+        if (tool === "select") {
             if (selectedIds.length > 0) {
                 const selectedShapes = getSelectedShapes(selectedIds);
                 const pointerInsideAnySelectedShape = Object.values(selectedShapes).some((shape) => isInside(globalPointerPos, shape));
@@ -131,7 +135,9 @@ export default function Canvas() {
                 y: initialCamera.y + offsetVector.y,
                 z: camera.z
             });
-        } else if (tool === "draw") {
+        }
+
+        if (tool === "draw") {
             const id: string = activeShapeId ? activeShapeId : `shape-${Date.now()}`;
             if (!activeShapeId) setActiveShapeId(id);
 
@@ -142,7 +148,9 @@ export default function Canvas() {
             }
 
             setShapes((shapes) => addShapes(shapes, id, newShape))
-        } else if (tool === "select") {
+        }
+
+        if (tool === "select") {
             // pointer down + no selection box means the original click
             // was inside of a selected shape, so we should move the selected shapes
             if (!selectionBox) {
@@ -174,10 +182,14 @@ export default function Canvas() {
 
         if (tool === "hand") {
             setInitialCamera(camera);
-        } else if (tool === "draw") {
+        }
+
+        if (tool === "draw") {
             setActiveShapeId(null);
             cleanupTmpPosition();
-        } else if (tool === "select") {
+        }
+
+        if (tool === "select") {
             setSelectionBox(null);
             cleanupTmpPosition();
         }
