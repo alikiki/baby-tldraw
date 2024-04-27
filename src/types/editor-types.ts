@@ -18,6 +18,11 @@ export interface Point {
     y: number
 }
 
+export interface Line {
+    start: Point,
+    end: Point
+}
+
 export interface Shape {
     type: string,
     x: number,
@@ -27,6 +32,11 @@ export interface Shape {
     tmpX?: number,
     tmpY?: number,
     selected: boolean
+}
+
+export interface ShapeInterval {
+    horizontal: Line,
+    vertical: Line
 }
 
 export type ShapeStore = {
