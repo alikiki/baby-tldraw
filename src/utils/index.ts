@@ -1,4 +1,4 @@
-import { Point, Camera, Box, Shape, Line, ShapeInterval } from "../types/editor-types"
+import { Point, Camera, Box, Shape } from "../types/editor-types"
 
 export const viewportToGlobal = (point: Point, camera: Camera): Point => {
     return {
@@ -35,28 +35,9 @@ export const isInside = (point: Point, shape: Shape): boolean => {
         point.y >= shape.y && point.y <= shape.y + shape.height;
 }
 
-const getLines = (shape: Shape): ShapeInterval => {
-    const horizontal = { start: { x: shape.x, y: shape.y }, end: { x: shape.x + shape.width, y: shape.y } };
-    const vertical = { start: { x: shape.x, y: shape.y }, end: { x: shape.x, y: shape.y + shape.height } };
-
-    return {
-        horizontal,
-        vertical
-    }
-}
-
-const lineOverlaps = (l1: Line, l2: Line, axis: "x" | "y"): boolean => {
-    if (l1.start[axis] < l2.start[axis] && l1.end[axis] > l2.start[axis]) return true;
-    if (l2.start[axis] < l1.start[axis] && l2.end[axis] > l1.start[axis]) return true;
-
-    return false;
-}
 
 export const intersects = (shape: Shape, selection: Shape): boolean => {
-    const { horizontal: shape_horizontal, vertical: shape_vertical } = getLines(shape);
-    const { horizontal: selection_horizontal, vertical: selection_vertical } = getLines(selection);
-
-    return lineOverlaps(shape_horizontal, selection_horizontal, "x") && lineOverlaps(shape_vertical, selection_vertical, "y");
+    return !(shape.x + shape.width < selection.x || shape.x > selection.x + selection.width || shape.y + shape.height < selection.y || shape.y > selection.y + selection.height);
 }
 
 export const zoomCamera = (point: Point, camera: Camera, zoomOffset: number): Camera => {

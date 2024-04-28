@@ -34,7 +34,7 @@ export default function InnerCanvas({ camera, shapes, selectionBox }: InnerCanva
                     const { path, style } = generateSVGPath(shape);
                     return <path key={k} d={path} style={style} />
                 })}
-                {selectionBox && <path d={generateSVGPath(selectionBox).path} style={{ fill: "lightgreen", fillOpacity: "0.4" }} />}
+                {selectionBox && <path d={generateSVGPath(selectionBox).path} style={{ fill: "lightblue", fillOpacity: "0.4" }} />}
             </g>
         </svg>
     )

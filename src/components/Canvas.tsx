@@ -153,6 +153,7 @@ export default function Canvas() {
         if (tool === "select") {
             // pointer down + no selection box means the original click
             // was inside of a selected shape, so we should move the selected shapes
+            console.log("selection box: ", selectionBox);
             if (!selectionBox) {
                 changeShapePosition(selectedIds, offsetVector.x, offsetVector.y);
                 return
